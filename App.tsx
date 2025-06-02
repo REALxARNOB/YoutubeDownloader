@@ -5,7 +5,7 @@
  * @format
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import type {PropsWithChildren} from 'react';
 import {
   ScrollView,
@@ -14,7 +14,12 @@ import {
   Text,
   useColorScheme,
   View,
+  TextInput,
+  Button,
+  Platform,
+  ProgressBarAndroid,
 } from 'react-native';
+import YoutubeDl from 'react-native-youtube-dl';
 
 import {
   Colors,
@@ -70,6 +75,24 @@ function App(): React.JSX.Element {
    * You can read more about it here:
    * https://github.com/react-native-community/discussions-and-proposals/discussions/827
    */
+  const [url, setUrl] = useState('');
+  const [progress, setProgress] = useState(0);
+
+  const downloadVideo = async () => {
+    try {
+      const path = await YoutubeDl.download(url, {
+        onProgress: (percentage: number) => {
+          setProgress(percentage / 100);
+        },
+      });
+      console.log('Downloaded to:', path);
+      // Handle successful download
+    } catch (error) {
+      console.error('Download error:', error);
+      // Handle download error
+    }
+  };
+
   const safePadding = '5%';
 
   return (
@@ -89,20 +112,23 @@ function App(): React.JSX.Element {
             paddingHorizontal: safePadding,
             paddingBottom: safePadding,
           }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
+          <TextInput
+            style={styles.input}
+            placeholder="Enter YouTube URL"
+            value={url}
+            onChangeText={setUrl}
+          />
+          <Button title="Download" onPress={downloadVideo} />
+          {Platform.OS === 'ios' ? (
+            //  <ProgressViewIOS progress={progress} />
+            <Text>Progress: {progress * 100}%</Text>
+          ) : (
+            <ProgressBarAndroid
+              styleAttr="Horizontal"
+              indeterminate={false}
+              progress={progress}
+            />
+          )}
         </View>
       </ScrollView>
     </View>
@@ -125,6 +151,12 @@ const styles = StyleSheet.create({
   },
   highlight: {
     fontWeight: '700',
+  },
+  input: {
+    height: 40,
+    margin: 12,
+    borderWidth: 1,
+    padding: 10,
   },
 });
 
